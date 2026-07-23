@@ -75,6 +75,7 @@ AUTO_REPLY_SIMILARITY_THRESHOLD = 0.85
 
 
 @app.get("/v1/healthz")
+@app.head("/v1/healthz")
 async def healthz():
     counts = {"category": 0, "merchant": 0, "customer": 0, "trigger": 0}
     for (scope, _cid) in contexts.keys():
