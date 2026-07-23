@@ -32,8 +32,6 @@ START_TIME = time.time()
 # OpenRouter (automatic fallback on error — already proven working since
 # it runs the judge in this setup).
 # ---------------------------------------------------------------------------
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "groq").lower()
-
 PROVIDERS = {
     "groq": {
         "url": "https://api.groq.com/openai/v1/chat/completions",
@@ -46,6 +44,16 @@ PROVIDERS = {
         "model": os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct"),
     },
 }
+
+_configured_provider = os.getenv("LLM_PROVIDER", "groq").lower()
+if _configured_provider not in PROVIDERS:
+    # A typo here (e.g. "gorq") would otherwise KeyError deep inside
+    # PROVIDERS[LLM_PROVIDER] and crash /v1/metadata and every compose()
+    # call. Fail safe instead: warn loudly, default to groq, keep serving.
+    print(f"[CONFIG WARNING] LLM_PROVIDER={_configured_provider!r} is not a recognized provider "
+          f"(expected 'groq' or 'openrouter') — defaulting to 'groq'. Check your .env for a typo.")
+    _configured_provider = "groq"
+LLM_PROVIDER = _configured_provider
 FALLBACK_PROVIDER = "openrouter" if LLM_PROVIDER == "groq" else "groq"
 PROVIDER_ORDER = [LLM_PROVIDER, FALLBACK_PROVIDER]
 
